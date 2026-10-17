@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Balcony Lab</title>
+  <meta name="description" content="A personal dashboard for tracking balcony cherry tomatoes and mint: observations, charts and rule-based next steps.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#dashboard"><span aria-hidden="true">🌱</span> Balcony Lab</a>
+      <nav class="tabs" aria-label="Sections">
+        <a href="#dashboard" data-view="dashboard">Dashboard</a>
+        <a href="#log" data-view="log">Log</a>
+        <a href="#history" data-view="history">History</a>
+        <a href="#charts" data-view="charts">Charts</a>
+        <a href="#settings" data-view="settings">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view">
+      <div class="view-head">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="lede">How each plant is doing, what changed, and what to do next.</p>
+        </div>
+        <a class="btn primary" href="#log">+ Log observation</a>
+      </div>
+      <div id="plant-cards" class="cards"></div>
+    </section>
+
+    <!-- Observation form -->
+    <section id="view-log" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <h1>Log an observation</h1>
+          <p class="lede">Record what you measured. Tick “estimated” when a value is a guess.</p>
+        </div>
+      </div>
+      <form id="obs-form" class="panel form" autocomplete="off">
+        <div class="row">
+          <label class="field">Date and time
+            <input type="datetime-local" name="datetime" required>
+          </label>
+          <div class="field">
+            <span class="label">Plant</span>
+            <div class="seg" id="f-plant"></div>
+          </div>
+          <label class="field">Growth stage
+            <select name="stage" id="f-stage"></select>
+          </label>
+        </div>
+
+        <div class="field">
+          <span class="label">Photo</span>
+          <div class="photo-input">
+            <input type="file" name="photo" accept="image/*" id="f-photo">
+            <img id="f-photo-preview" alt="Selected photo preview" hidden>
+          </div>
+        </div>
+
+        <fieldset>
+          <legend>Measurements</legend>
+          <div class="row">
+            <label class="field">Height (cm)
+              <input type="number" name="height" min="0" step="0.1" inputmode="decimal">
+            </label>
+            <label class="check"><input type="checkbox" name="heightEst"> Height is estimated</label>
+            <label class="field">Leaf count
+              <input type="number" name="leafCount" min="0" step="1" inputmode="numeric">
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset id="fs-roots">
+          <legend>Root development</legend>
+          <div class="seg wrap" id="f-roots"></div>
+          <label class="field">Root notes
+            <input type="text" name="rootNotes" placeholder="e.g. 3 roots, longest ~1 cm">
+          </label>
+        </fieldset>
+
+        <fieldset id="fs-soil">
+          <legend>Soil moisture <span class="hint">(feel the top 1–2 cm)</span></legend>
+          <div class="seg wrap" id="f-soil"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Environment</legend>
+          <div class="row">
+            <label class="field">Daytime temp (°C)
+              <input type="number" name="tempDay" step="0.5" inputmode="decimal">
+            </label>
+            <label class="field">Nighttime temp (°C)
+              <input type="number" name="tempNight" step="0.5" inputmode="decimal">
+            </label>
+            <label class="check"><input type="checkbox" name="tempEst"> Temperatures are estimated</label>
+          </div>
+          <label class="field">Sunlight exposure
+            <select name="sunlight" id="f-sun"></select>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Actions taken</legend>
+          <div class="chips" id="f-actions"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>What you noticed</legend>
+          <div class="chips" id="f-symptoms"></div>
+          <label class="field">Notes
+            <textarea name="notes" rows="3" placeholder="Leaf colour, wilting, new growth, pests…"></textarea>
+          </label>
+        </fieldset>
+
+        <div class="form-actions">
+          <a class="btn" href="#dashboard">Cancel</a>
+          <button class="btn primary" type="submit">Save observation</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- History -->
+    <section id="view-history" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <h1>History</h1>
+          <p class="lede">Every observation and completed task, newest first.</p>
+        </div>
+        <label class="field inline">Show
+          <select id="history-filter">
+            <option value="all">Both plants</option>
+            <option value="tomato">Cherry tomatoes</option>
+            <option value="mint">Mint</option>
+          </select>
+        </label>
+      </div>
+      <div class="history-grid">
+        <div>
+          <h2>Observations</h2>
+          <ol id="history-list" class="entries"></ol>
+        </div>
+        <div>
+          <h2>Completed tasks</h2>
+          <ol id="task-list" class="entries tasks"></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section id="view-charts" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <h1>Charts</h1>
+          <p class="lede">Growth and conditions over time. With one plant per condition, treat patterns as exploratory.</p>
+        </div>
+      </div>
+      <div class="chart-grid">
+        <article class="panel"><h2>Plant height</h2><div id="chart-height"></div></article>
+        <article class="panel"><h2>Temperature</h2><div id="chart-temp"></div></article>
+        <article class="panel"><h2>Cherry tomatoes: watering vs growth</h2><div id="chart-water-tomato"></div><div id="table-water-tomato"></div></article>
+        <article class="panel"><h2>Mint: watering vs growth</h2><div id="chart-water-mint"></div><div id="table-water-mint"></div></article>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <h1>Settings</h1>
+          <p class="lede">Plant details and your data.</p>
+        </div>
+      </div>
+      <div id="plant-settings" class="cards"></div>
+      <article class="panel data-panel">
+        <h2>Your data</h2>
+        <p>Observations and photos are saved <strong>in this browser only</strong>. Hosting on GitHub Pages publishes the code, not your data. Export a backup regularly, and import it to move to another device.</p>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-export" type="button">Export backup (.json)</button>
+          <label class="btn">Import backup<input type="file" id="btn-import" accept="application/json,.json" hidden></label>
+          <button class="btn danger" id="btn-reset" type="button">Delete all data</button>
+        </div>
+        <p class="hint" id="storage-info"></p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Balcony Lab · cherry tomatoes &amp; mint · data stays in your browser
+  </footer>
+
+  <dialog id="task-dialog">
+    <form method="dialog">
+      <h2 id="task-dialog-title">Mark task as done</h2>
+      <p id="task-dialog-action" class="dialog-action"></p>
+      <label class="field">What happened? <span class="hint">(optional)</span>
+        <textarea name="result" rows="3" placeholder="e.g. Watered 300 ml, drained after a minute"></textarea>
+      </label>
+      <div class="form-actions">
+        <button class="btn" value="cancel" formnovalidate>Cancel</button>
+        <button class="btn" value="log">Save &amp; log observation</button>
+        <button class="btn primary" value="done">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
